@@ -5,11 +5,25 @@ import (
 	"reflect"
 )
 
-func Build(hfs ...interface{}) http.Handler {
-	curr := reflect.ValueOf(http.Handler(http.DefaultServeMux))
-	for _, hf := range hfs {
-		rv := reflect.ValueOf(hf)
-		curr = rv.Call([]reflect.Value{curr})[0]
+type handler struct {
+	h http.Handler
+}
+
+func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.h.ServeHTTP(w, r)
+}
+
+func Build(hs ...interface{}) http.Handler {
+	curr := http.Handler(http.DefaultServeMux)
+	for _, h := range hs {
+		if _, ok := h.(http.Handler); ok {
+			curr = &handler{curr}
+		} else {
+			rv := reflect.ValueOf(h)
+			if rv.Kind() == reflect.Func {
+				curr = rv.Call([]reflect.Value{reflect.ValueOf(curr)})[0].Interface().(http.Handler)
+			}
+		}
 	}
-	return curr.Interface().(http.Handler)
+	return curr
 }
