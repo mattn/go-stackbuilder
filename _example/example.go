@@ -38,7 +38,7 @@ func main() {
 		templ.Execute(w, context)
 	}))
 
-	http.ListenAndServe(":8888", stackbuilder.NewStackBuilder(
+	http.ListenAndServe(":8888", stackbuilder.Build(
 		nosurf.New,
 		weblogs.Handler,
 	))

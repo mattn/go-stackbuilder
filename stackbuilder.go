@@ -5,7 +5,7 @@ import (
 	"reflect"
 )
 
-func NewStackBuilder(hfs ...interface{}) http.Handler {
+func Build(hfs ...interface{}) http.Handler {
 	curr := reflect.ValueOf(http.Handler(http.DefaultServeMux))
 	for _, hf := range hfs {
 		rv := reflect.ValueOf(hf)
