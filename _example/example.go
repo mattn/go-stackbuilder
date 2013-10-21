@@ -3,7 +3,8 @@ package main
 import (
 	"github.com/justinas/nosurf"
 	"github.com/keep94/weblogs"
-	"github.com/mattn/go-stackbuilder"
+	"github.com/mattn/go-aaencode"
+	sb "github.com/mattn/go-stackbuilder"
 	"html/template"
 	"net/http"
 )
@@ -30,16 +31,21 @@ var templ = template.Must(template.New("t1").Parse(templateString))
 
 func main() {
 	http.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		context := make(map[string]string)
-		context["token"] = nosurf.Token(r)
-		if r.Method == "POST" {
-			context["name"] = r.FormValue("name")
+		if r.URL.Path == "/" {
+			context := make(map[string]string)
+			context["token"] = nosurf.Token(r)
+			if r.Method == "POST" {
+				context["name"] = r.FormValue("name")
+			}
+			templ.Execute(w, context)
 		}
-		templ.Execute(w, context)
 	}))
 
-	http.ListenAndServe(":8888", stackbuilder.Build(
+	http.Handle("/static/", http.FileServer(http.Dir(".")))
+
+	http.ListenAndServe(":8888", sb.Build(
 		nosurf.New,
 		weblogs.Handler,
+		aaencode.AAFilter,
 	))
 }
